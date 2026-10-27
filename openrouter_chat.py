@@ -12,10 +12,12 @@ Usage:
 
 import json
 import os
+import ssl
 import sys
 import urllib.error
 import urllib.request
 
+import certifi
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,6 +26,7 @@ API_URL = os.environ.get(
     "OPENROUTER_API_URL", "https://openrouter.ai/api/v1/chat/completions"
 )
 MODEL = os.environ.get("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 
 
 def chat(prompt: str, model: str | None = None, system: str | None = None) -> str:
@@ -51,7 +54,9 @@ def chat(prompt: str, model: str | None = None, system: str | None = None) -> st
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=60) as response:
+        with urllib.request.urlopen(
+            request, timeout=60, context=SSL_CONTEXT
+        ) as response:
             data = json.load(response)
     except urllib.error.HTTPError as exc:
         raise SystemExit(f"API error {exc.code}: {exc.read().decode()}")
